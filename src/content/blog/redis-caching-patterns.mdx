@@ -1,0 +1,47 @@
+---
+title: "Redis Caching Patterns That Actually Hold Up in Production"
+slug: "redis-caching-patterns"
+date: "2026-05-18"
+excerpt: "Cache-aside, write-through, and the invalidation bugs that show up only under real traffic — with the patterns that held up in production."
+tags: ["redis", "backend", "performance"]
+published: true
+---
+
+Caching is easy to add and easy to get subtly wrong. Most of the pain isn't
+picking a strategy — it's invalidation.
+
+## Cache-aside, the default
+
+Read from Redis first; on a miss, read from the database and populate the
+cache for next time.
+
+```ts
+async function getUser(id: string) {
+  const cached = await redis.get(`user:${id}`);
+  if (cached) return JSON.parse(cached);
+
+  const user = await db.user.findUnique({ where: { id } });
+  await redis.set(`user:${id}`, JSON.stringify(user), "EX", 300);
+  return user;
+}
+```
+
+<Callout type="info">
+  Cache-aside degrades gracefully — if Redis is down, reads fall back to the
+  database instead of failing outright. That's why it's usually the default.
+</Callout>
+
+## The invalidation trap
+
+The bug that actually bites in production: writes updating the database but
+forgetting to invalidate the corresponding cache key, so stale data serves
+correctly for the cache's TTL and then "randomly" fixes itself. Tie every
+write path to an explicit `redis.del()` on the same key the read path uses —
+don't rely on TTL alone as your only invalidation strategy.
+
+## When write-through earns its complexity
+
+For data read far more often than it's written, write-through (updating cache
+and database in the same request) removes the cache-miss penalty entirely at
+the cost of a slightly slower write. Worth it for session data and hot
+lookups; not worth it for infrequently-read tables.

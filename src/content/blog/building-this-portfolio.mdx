@@ -1,0 +1,57 @@
+---
+title: "Building This Portfolio: Architecture Notes"
+slug: "building-this-portfolio"
+date: "2026-07-10"
+excerpt: "Why this site runs on Next.js 16, Tailwind v4, and a lean content pipeline with Velite instead of a database — and what broke along the way."
+tags: ["nextjs", "architecture"]
+published: true
+---
+
+This site is intentionally backend-light: no Prisma, no Postgres, no database to
+provision. Blog posts are local MDX files parsed at build time, and the contact
+form (once it ships) will call Resend directly from a Server Action.
+
+## Why Velite, not Contentlayer
+
+Contentlayer was the obvious choice for typed MDX content in Next.js — until it
+wasn't. It's been unmaintained since 2024. Velite fills the same niche —
+Zod-schema-validated content collections, typed at build time — without the
+abandoned dependency.
+
+<Callout type="info">
+  Velite's schema builder (`s.mdx()`, `s.slug()`, `s.isodate()`) is layered on
+  top of Zod, so the same validation error messages and `.transform()` API you
+  already know just work.
+</Callout>
+
+## Rendering compiled MDX
+
+Velite compiles each post's MDX body to a `function-body` string ahead of
+time. Rendering it is just evaluating that string with `@mdx-js/mdx`'s `run`:
+
+```tsx
+import { run } from "@mdx-js/mdx";
+import * as runtime from "react/jsx-runtime";
+
+const { default: Component } = await run(post.content, runtime);
+```
+
+No `next-mdx-remote` dependency needed — `@mdx-js/mdx` already ships as a
+transitive dependency of Velite.
+
+## What this unlocks
+
+| Feature               | How                                                  |
+| --------------------- | ---------------------------------------------------- |
+| Syntax highlighting   | `rehype-pretty-code` (Shiki), compiled at build time |
+| Tables, strikethrough | `remark-gfm`                                         |
+| Heading anchors       | `rehype-slug`                                        |
+
+None of this costs a single byte of client-side JavaScript for the highlighting
+itself — the `<pre>`/`<code>` output already contains the styled spans by the
+time it reaches the browser.
+
+<Callout type="warning">
+  Turbopack doesn't support Velite's webpack plugin. The fix: call Velite's
+  programmatic `build()` API directly from `next.config.ts`, bundler-agnostic.
+</Callout>

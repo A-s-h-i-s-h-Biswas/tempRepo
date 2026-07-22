@@ -1,0 +1,52 @@
+---
+title: "PostgreSQL Indexing: What EXPLAIN ANALYZE Actually Tells You"
+slug: "postgres-indexing"
+date: "2026-01-14"
+excerpt: "Reading a real EXPLAIN ANALYZE plan, why a missing index isn't always the problem, and what row-level security does to Postgres's query planner."
+tags: ["postgresql", "database", "performance"]
+published: true
+---
+
+Adding an index and hoping is a common first move. Reading the actual query
+plan first saves the guesswork.
+
+## Reading a real plan
+
+```sql
+EXPLAIN ANALYZE
+SELECT * FROM applications WHERE user_id = 123 ORDER BY created_at DESC;
+```
+
+If this shows a `Seq Scan` on a large table, that's the signal — not the
+absence of an index by itself, since Postgres will happily ignore an index
+it doesn't think is selective enough to be worth the random I/O.
+
+```sql
+CREATE INDEX idx_applications_user_created
+  ON applications (user_id, created_at DESC);
+```
+
+A composite index matching both the filter and the sort order lets Postgres
+satisfy the whole query from the index alone.
+
+<Callout type="info">
+  Column order in a composite index matters — it needs to match your most
+  selective filter first, then the sort column, not the other way around.
+</Callout>
+
+## Row-level security changes the plan, not just the result
+
+Row-level security (RLS) policies get folded into every query's `WHERE`
+clause invisibly. A slow policy check — say, a subquery against another
+table — runs on every single row before your actual filter even applies. The
+fix that mattered in practice: restructure the policy so an indexed column
+(like `clinic_id`) is checked first, letting the planner filter early instead
+of evaluating an expensive condition per row.
+
+## The index that doesn't help
+
+An index only helps if the planner's cost estimate says it's cheaper than a
+sequential scan — which usually means the query needs to return a small
+enough fraction of the table. On a small table, Postgres will often correctly
+choose a sequential scan over an index it has anyway. That's not a bug to
+"fix."

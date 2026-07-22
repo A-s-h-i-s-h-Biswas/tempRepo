@@ -1,0 +1,47 @@
+---
+title: "Building a RAG Pipeline That Doesn't Hallucinate Structured Data"
+slug: "building-rag-pipelines"
+date: "2025-11-08"
+excerpt: "Constrained output schemas, retry-on-validation-failure, and why free-form JSON parsing breaks in production in ways it never does in a demo."
+tags: ["ai", "llm", "backend"]
+published: true
+---
+
+Retrieval-augmented generation demos are easy. The gap between "the demo
+worked" and "this runs reliably in production" is almost entirely about
+constraining output, not improving prompts.
+
+## Constrain the output shape
+
+Asking a model to "return JSON" and parsing the response with `JSON.parse`
+works until it doesn't — extra prose before the JSON, trailing commas,
+truncated output. Use function-calling / structured-output modes instead of
+free-form text:
+
+```ts
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages,
+  tools: [{ type: "function", function: extractionSchema }],
+  tool_choice: { type: "function", function: { name: "extract_application" } },
+});
+```
+
+<Callout type="warning">
+  Structured-output modes reduce malformed JSON — they don't eliminate wrong
+  values. Validate the result against your schema anyway.
+</Callout>
+
+## Retry on validation failure, not on every failure
+
+When the schema validation fails, retry once with a stricter, more explicit
+prompt describing exactly which field was wrong — not the same prompt again.
+Falling back to a manual-review queue after one retry beats an infinite retry
+loop against a model that's consistently confused by that specific input.
+
+## Retrieval quality beats prompt tweaking
+
+Most "hallucination" issues traced back to retrieval returning irrelevant
+context, not the model inventing facts unprompted. Time spent tuning chunk
+size and embedding relevance mattered more than any amount of prompt
+engineering on top of bad retrieved context.

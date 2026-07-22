@@ -1,0 +1,49 @@
+---
+title: "System Design Notes: Scaling a Node API Past the First Bottleneck"
+slug: "scaling-a-node-api"
+date: "2026-03-02"
+excerpt: "The order bottlenecks actually show up in a growing Node API, and which fix matters at each stage — not the idealized system design diagram."
+tags: ["system-design", "node", "backend"]
+published: true
+---
+
+System design diagrams always show the end state — load balancer, cache,
+queue, read replicas — as if it all arrived at once. In practice, bottlenecks
+show up one at a time, in a fairly predictable order.
+
+## Stage 1: the database is the bottleneck
+
+Almost always first. The fix isn't more application servers — it's an index,
+a query rewrite, or a read replica for the reads that don't need
+strong consistency.
+
+## Stage 2: synchronous work blocking the request
+
+Sending an email or generating a report inside the request handler caps your
+throughput at however slow that side effect is. Move it to a queue:
+
+```ts
+app.post("/signup", async (req, res) => {
+  const user = await createUser(req.body);
+  await queue.add("send-welcome-email", { userId: user.id });
+  res.status(201).json(user);
+});
+```
+
+<Callout type="warning">
+  A queue only helps if the caller doesn't need the result immediately. Don't
+  queue work the user is actively waiting on — that just adds latency.
+</Callout>
+
+## Stage 3: the cache stampede
+
+Once you've added caching, a popular key expiring under high concurrent load
+sends every request to the database at once. Lock the recompute (or serve
+stale-while-revalidate) instead of letting every request race to repopulate
+the same key.
+
+## Stage 4: horizontal scaling exposes state
+
+Sessions or in-memory rate limiters that worked fine on one instance break
+silently across multiple instances. This is usually the point where Redis
+stops being optional.
