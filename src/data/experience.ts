@@ -95,56 +95,56 @@
 import type { Experience } from "@/types/experience";
 
 export const experiences: Experience[] = [
-  {
-    id: "ashcode",
-    company: "AshCode",
-    role: "Full Stack Engineer",
-    startDate: "2026-03",
-    endDate: null,
-    location: "Kolkata, India",
-    summary:
-      "Building modern, production-ready web applications, SaaS products, and AI-powered solutions with a strong focus on performance, scalability, user experience, and SEO.",
+  // {
+  //   id: "ashcode",
+  //   company: "AshCode",
+  //   role: "Full Stack Engineer",
+  //   startDate: "2026-03",
+  //   endDate: null,
+  //   location: "Kolkata, India",
+  //   summary:
+  //     "Building modern, production-ready web applications, SaaS products, and AI-powered solutions with a strong focus on performance, scalability, user experience, and SEO.",
 
-    responsibilities: [
-      "Architect and develop full-stack applications using Next.js, TypeScript, Node.js, Express, and MongoDB.",
-      "Design reusable UI components and scalable backend APIs following modern engineering practices.",
-      "Build SEO-optimized, responsive, and high-performance web applications for businesses and startups.",
-      "Integrate authentication, payment gateways, cloud storage, AI APIs, and third-party services.",
-      "Manage end-to-end product development from planning and system design to deployment and maintenance.",
-    ],
+  //   responsibilities: [
+  //     "Architect and develop full-stack applications using Next.js, TypeScript, Node.js, Express, and MongoDB.",
+  //     "Design reusable UI components and scalable backend APIs following modern engineering practices.",
+  //     "Build SEO-optimized, responsive, and high-performance web applications for businesses and startups.",
+  //     "Integrate authentication, payment gateways, cloud storage, AI APIs, and third-party services.",
+  //     "Manage end-to-end product development from planning and system design to deployment and maintenance.",
+  //   ],
 
-    achievements: [
-      "Built multiple production-ready applications using the MERN and Next.js ecosystem.",
-      "Created scalable backend architectures with secure authentication and RESTful APIs.",
-      "Designed premium user experiences with modern UI/UX principles and responsive layouts.",
-      "Focused on performance optimization, code quality, and maintainable architecture across projects.",
-    ],
+  //   achievements: [
+  //     "Built multiple production-ready applications using the MERN and Next.js ecosystem.",
+  //     "Created scalable backend architectures with secure authentication and RESTful APIs.",
+  //     "Designed premium user experiences with modern UI/UX principles and responsive layouts.",
+  //     "Focused on performance optimization, code quality, and maintainable architecture across projects.",
+  //   ],
 
-    metrics: [
-      { label: "Projects Built", value: "10+" },
-      { label: "Tech Stack", value: "MERN + Next.js" },
-      { label: "Focus", value: "Performance & SEO" },
-    ],
+  //   metrics: [
+  //     { label: "Projects Built", value: "10+" },
+  //     { label: "Tech Stack", value: "MERN + Next.js" },
+  //     { label: "Focus", value: "Performance & SEO" },
+  //   ],
 
-    technologies: [
-      "Next.js",
-      "React",
-      "TypeScript",
-      "Node.js",
-      "Express.js",
-      "MongoDB",
-      "PostgreSQL",
-      "Tailwind CSS",
-      "Redux Toolkit",
-      "Firebase",
-      "Docker",
-      "Git",
-      "REST API",
-      "JWT",
-    ],
+  //   technologies: [
+  //     "Next.js",
+  //     "React",
+  //     "TypeScript",
+  //     "Node.js",
+  //     "Express.js",
+  //     "MongoDB",
+  //     "PostgreSQL",
+  //     "Tailwind CSS",
+  //     "Redux Toolkit",
+  //     "Firebase",
+  //     "Docker",
+  //     "Git",
+  //     "REST API",
+  //     "JWT",
+  //   ],
 
-    companyUrl: "https://ashcode.in",
-  },
+  //   companyUrl: "https://ashcode.in",
+  // },
 
   {
     id: "aeonix",
